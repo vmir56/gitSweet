@@ -1,0 +1,72 @@
+                                        Table "public.sources"
+    Column    |           Type           | Collation | Nullable |               Default               
+--------------+--------------------------+-----------+----------+-------------------------------------
+ id           | integer                  |           | not null | nextval('sources_id_seq'::regclass)
+ product_id   | integer                  |           | not null | 
+ shop_name    | character varying(200)   |           | not null | 
+ shop_url     | character varying(500)   |           | not null | 
+ product_url  | character varying(500)   |           | not null | 
+ price        | double precision         |           |          | 
+ old_price    | double precision         |           |          | 
+ currency     | character varying(3)     |           |          | 
+ availability | boolean                  |           |          | 
+ stock_count  | integer                  |           |          | 
+ raw_data     | json                     |           |          | 
+ screenshot   | character varying(500)   |           |          | 
+ parsed_at    | timestamp with time zone |           |          | now()
+ is_active    | boolean                  |           |          | 
+Indexes:
+    "sources_pkey" PRIMARY KEY, btree (id)
+    "ix_sources_id" btree (id)
+Foreign-key constraints:
+    "sources_product_id_fkey" FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+Referenced by:
+    TABLE "history" CONSTRAINT "history_source_id_fkey" FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE CASCADE
+
+
+
+                                       Table "public.products"
+   Column   |           Type           | Collation | Nullable |               Default                
+------------+--------------------------+-----------+----------+--------------------------------------
+ id         | integer                  |           | not null | nextval('products_id_seq'::regclass)
+ user_id    | integer                  |           | not null | 
+ query      | character varying(500)   |           | not null | 
+ name       | character varying(500)   |           |          | 
+ brand      | character varying(200)   |           |          | 
+ model      | character varying(200)   |           |          | 
+ ean        | character varying(13)    |           |          | 
+ created_at | timestamp with time zone |           |          | now()
+ updated_at | timestamp with time zone |           |          | 
+Indexes:
+    "products_pkey" PRIMARY KEY, btree (id)
+    "ix_products_ean" btree (ean)
+    "ix_products_id" btree (id)
+    "ix_products_user_id" btree (user_id)
+Referenced by:
+    TABLE "history" CONSTRAINT "history_product_id_fkey" FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    TABLE "sources" CONSTRAINT "sources_product_id_fkey" FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+
+
+
+
+                                       Table "public.history"
+   Column    |           Type           | Collation | Nullable |               Default               
+-------------+--------------------------+-----------+----------+-------------------------------------
+ id          | integer                  |           | not null | nextval('history_id_seq'::regclass)
+ product_id  | integer                  |           | not null | 
+ source_id   | integer                  |           |          | 
+ event_type  | character varying(50)    |           | not null | 
+ status      | character varying(20)    |           |          | 
+ message     | text                     |           |          | 
+ snapshot    | json                     |           |          | 
+ ip_used     | character varying(45)    |           |          | 
+ proxy_used  | character varying(100)   |           |          | 
+ duration_ms | integer                  |           |          | 
+ created_at  | timestamp with time zone |           |          | now()
+Indexes:
+    "history_pkey" PRIMARY KEY, btree (id)
+    "ix_history_id" btree (id)
+Foreign-key constraints:
+    "history_product_id_fkey" FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    "history_source_id_fkey" FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE CASCADE
+

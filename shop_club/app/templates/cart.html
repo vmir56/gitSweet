@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>🛒 Корзина</h1>
+    
+    {% if cart_items and cart_items|length > 0 %}
+    <!-- Временно, для отладки -->
+    <div style="background: #f0f0f0; padding: 10px; margin-bottom: 20px; font-size: 12px;">
+        <strong>DEBUG:</strong> cart_items length = {{ cart_items|length }}, total = {{ total }}, user = {{ current_user.username }}
+    </div>
+        <div class="cart-items">
+            <table class="cart-table">
+                <thead>
+                    <tr>
+                        <th>Товар</th>
+                        <th>Цена</th>
+                        <th>Количество</th>
+                        <th>Сумма</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in cart_items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td>{{ item.price }} ₽</td>
+                        <td>
+                            <!-- ВАЖНО: используем product_id, а не id -->
+                            <form method="post" action="/cart/update/{{ item.product_id }}" style="display: inline;">
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" style="width: 60px;">
+                                <button type="submit">Обновить</button>
+                            </form>
+                        </td>
+                        <td>{{ item.total }} ₽</td>
+                        <td>
+                            <!-- ВАЖНО: используем product_id, а не id -->
+                            <form method="post" action="/cart/remove/{{ item.product_id }}" style="display: inline;">
+                                <button type="submit" class="btn-danger">Удалить</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <div class="cart-summary">
+                <h3>Итого: {{ total }} ₽</h3>
+                <div class="cart-buttons">
+                    <form method="post" action="/cart/clear" style="display: inline;">
+                        <button type="submit" class="btn-danger">Очистить корзину</button>
+                    </form>
+                    <a href="/catalog" class="btn-primary">Продолжить покупки</a>
+                    <a href="/checkout" class="btn-success">Оформить заказ</a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="empty-cart">
+            <h2>Корзина пуста</h2>
+            <p>Добавьте товары из <a href="/catalog">каталога</a></p>
+        </div>
+    {% endif %}
+    
+    {% if not is_authenticated %}
+    <div class="warning">
+        ⚠️ Вы не авторизованы. <a href="/auth/login">Войдите</a> чтобы сохранить корзину между сессиями.
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .cart-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    .cart-table th, .cart-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+    .cart-summary {
+        text-align: right;
+        margin-top: 20px;
+    }
+    .cart-buttons {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+    .btn-primary, .btn-danger, .btn-success {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+    .btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+    .btn-success {
+        background: #28a745;
+        color: white;
+    }
+    .warning {
+        margin-top: 20px;
+        padding: 10px;
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 5px;
+    }
+    .empty-cart {
+        text-align: center;
+        padding: 50px;
+    }
+</style>
+{% endblock %}

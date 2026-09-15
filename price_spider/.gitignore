@@ -1,0 +1,12 @@
+/.DS_Store
+/.env
+/alembic
+/env.example.txt
+/html_dumps
+/logs
+/migrations
+/screenshots
+/venv
+/firefox_profile
+/chrome_profile
+/TRASH

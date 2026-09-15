@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+{% extends "base.html" %}
+
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+        
+        .cart-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .cart-count {
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.8rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        h1 {
+            margin-bottom: 2rem;
+            color: #333;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+        
+        .product-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .product-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .product-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin: 1rem 0;
+        }
+        
+        .btn-add {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-add:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+        }
+        
+        .btn-outline {
+            border: 2px solid #667eea;
+            color: #667eea;
+            background: transparent;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+        
+        .btn-outline:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📦 Каталог товаров</h1>        
+        <div class="products-grid" id="productsGrid">
+            {% for product in products %}
+            <div class="product-card" data-product-id="{{ product.id }}">
+                <div class="product-name">{{ product.name }}</div>
+                <div class="product-price">{{ product.price }} ₽</div>
+                <!-- Изображение товара -->                             
+                {% if product.image_url and product.image_url|trim and product.image_url != 'None' %}
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" style="height: 170px; width: 100%; object-fit: contain; object-position: center;">
+                {% else %}
+                    <!-- Дефолтная картинка, если url пустой -->
+                    <img src="{{ url_for('static', path='images/session.png') }}" style="height: 170px; object-fit: cover;"">
+                {% endif %}
+                <button class="btn-add" onclick="addToCart('{{ product.id }}', this)">
+                    Добавить в корзину
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <script>
+        // Обновление счетчика корзины с сервера
+        async function updateCartCount() {
+            try {
+                let response = await fetch('/cart/count');
+                let data = await response.json();
+                let countElement = document.getElementById('cartCount');
+                countElement.textContent = data.count || 0;
+            } catch (error) {
+                console.error('Error updating cart count:', error);
+            }
+        }
+        
+        // Показ сообщения
+        function showMessage(message, type) {
+            let messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + type;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            setTimeout(function() {
+                messageDiv.remove();
+            }, 3000);
+        }
+        
+        // Добавление в корзину через сервер
+        async function addToCart(productId, button) {
+            let originalText = button.textContent;
+            button.textContent = '⏳ Добавление...';
+            button.disabled = true;
+            
+            try {
+                let formData = new URLSearchParams();
+                formData.append('quantity', '1');
+                
+                let response = await fetch('/cart/add/' + productId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                
+                let data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showMessage('✅ ' + (data.message || 'Товар добавлен в корзину!'), 'success');
+                    // Обновляем счетчик из ответа сервера
+                    if (data.cart_count !== undefined) {
+                        document.getElementById('cartCount').textContent = data.cart_count;
+                    } else {
+                        await updateCartCount();
+                    }
+                } else {
+                    showMessage('❌ Ошибка: ' + (data.message || 'Не удалось добавить товар'), 'error');
+                }
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                showMessage('❌ Ошибка соединения с сервером', 'error');
+            } finally {
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        }
+        
+        // Загружаем счетчик при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCartCount();
+        });
+    </script>        
+</body>
+{% endblock %}

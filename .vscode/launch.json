@@ -1,0 +1,56 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "🔵 Price Spider",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/price_spider/venv/bin/uvicorn", // Запуск напрямую через бинарник uvicorn
+            "args": [
+                "app.main:app",
+                "--port",
+                "8001",
+                "--reload"
+            ],
+            "jinja": true,
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/price_spider",
+            "python": "${workspaceFolder}/price_spider/venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/price_spider",
+                "DATABASE_URL": "postgresql+asyncpg://v.ant@localhost:5432/spider_db"
+            },
+            "console": "integratedTerminal" // Возвращаем терминал
+        },
+        {
+            "name": "🟢 Shop Club",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/shop_club/venv/bin/uvicorn", // Запуск напрямую через бинарник uvicorn
+            "args": [
+                "app.main:app",
+                "--port",
+                "8000",
+                "--reload"
+            ],
+            "jinja": true,
+            "justMyCode": true,
+            "cwd": "${workspaceFolder}/shop_club",
+            "python": "${workspaceFolder}/shop_club/venv/bin/python",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/shop_club",
+                "DATABASE_URL": "postgresql+asyncpg://v.ant@localhost:5432/shop_club_db"
+            },
+            "console": "integratedTerminal" // Возвращаем терминал
+        }
+    ],
+    "compounds": [
+        {
+            "name": "🔥 Запустить всё (Spider + Shop)",
+            "configurations": [
+                "🔵 Price Spider",
+                "🟢 Shop Club"
+            ]
+        }
+    ]
+}

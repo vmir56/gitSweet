@@ -1,0 +1,10 @@
+fastapi[all]
+uvicorn[standard]
+sqlalchemy
+aiosqlite
+passlib
+python-jose[cryptography]
+python-jose
+jinja2
+setuptools
+wheel
