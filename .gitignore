@@ -1,0 +1,12 @@
+# Общее
+.env
+__pycache__/
+*.pyc
+
+# Для каждого сервиса
+**/venv/
+**/logs/
+**/html_dumps/
+**/screenshots/
+**/chrome_profile/
+.DS_Store

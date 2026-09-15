@@ -1,0 +1,42 @@
+services:
+  shop_club:
+    build:
+      context: ./shop_club
+    container_name: shop_club_1st
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - ozo_mesh
+
+  price_spider:
+    build:
+      context: ./price_spider
+    container_name: price_spider_2nd
+    restart: always
+    ports:
+      - "8001:8001"  # Открываем порт для shop_club
+    env_file:
+      - .env
+    dns:
+      - 77.88.8.8    # Маскировка DNS для Озона
+      - 8.8.8.8
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # Монтируем папку с профилем из корня проекта на хосте в контейнер
+      - ./browser_profile:/app/browser_profile
+      #
+      - ./price_spider/screenshots:/app/screenshots
+      - ./price_spider/html_dumps:/app/html_dumps
+      - ./price_spider/logs:/app/logs
+    networks:
+      - ozo_mesh
+
+networks:
+  ozo_mesh:
+    driver: bridge

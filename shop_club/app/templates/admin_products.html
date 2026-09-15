@@ -1,0 +1,911 @@
+{% extends "base.html" %}
+
+{% block title %}Управление товарами - Админ панель{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>📦 Управление товарами</h1>
+        <a href="/docs" class="btn btn-primary">SwaggerUI</a>
+        <a href="/search" class="btn btn-primary">Найти аналоги</a>
+        <a href="/admin/products" class="btn-primary">➕ Добавить товар</a>
+        <button onclick="openCreateModal()" class="btn-add">➕ v.2.Добавить товар</button>
+    </div>
+
+    <!-- Фильтры -->
+    <div class="filters-section">
+        <div class="filters-form">
+            <div class="filter-group">
+                <label>Показывать:</label>
+                <select id="filter-limit" class="filter-select">
+                    <option value="10">Последние 10</option>
+                    <option value="20">Последние 20</option>
+                    <option value="50">Последние 50</option>
+                    <option value="all">Все</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Поиск по названию:</label>
+                <input type="text" id="filter-name" class="filter-input" placeholder="Введите название...">
+            </div>
+
+            <div class="filter-group">
+                <label>Категория:</label>
+                <select id="filter-category" class="filter-select">
+                    <option value="all">Все категории</option>
+                    {% for category in categories.values() %}
+                    <option value="{{ category }}">{{ category }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button id="apply-filters" class="btn-filter">🔍 Применить</button>
+            <button id="reset-filters" class="btn-reset-filter">🔄 Сбросить</button>
+        </div>
+    </div>
+
+    <!-- Таблица товаров -->
+    <div class="products-table-container">
+        <table class="products-table" id="products-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Изображение</th>
+                    <th>Название</th>
+                    <th>Категория</th>
+                    <th>Цена</th>
+                    <th>Остаток</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="products-tbody">
+                {% for product in products %}
+                <tr id="product-row-{{ product.id }}" data-category-id="{{ product.category_id }}"
+                    data-image-url="{{ product.image_url }}">
+                    <td class="prod-id">{{ product.id }}</td>
+                    <td class="prod-image">
+                        <div class="product-thumb">
+                            <!-- Изображение товара -->
+                            {% if product.image_url and product.image_url|trim and product.image_url != 'None' %}
+                            <img src="{{ product.image_url }}" alt="{{ product.name }}"
+                                style="height: 40px; width: 100%; object-fit: contain; object-position: center; border-radius: 5px;">
+                            {% else %}
+                            <!-- Дефолтная картинка, если url пустой -->
+                            <img src="{{ url_for('static', path='images/session.png') }}"
+                                style="height: 40px; width: 100%; object-fit: contain; object-position: center; border-radius: 5px;">
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="prod-name">{{ product.name }}</td>
+                    <td class="prod-desc" style="display:none;">{{ product.description }}</td>
+                    <td class="prod-category">{{ categories.get(product.category_id, 'Без категории') }}</td>
+                    <td class="prod-price">{{ product.price }} ₽</td>
+                    <td class="prod-stock">{{ product.stock }}</td>
+                    <td class="prod-actions">
+                        <button onclick="openEditModal({{ product.id }})" class="btn-edit">✏️ Редактировать</button>
+                        <button onclick="deleteProduct({{ product.id }}, '{{ product.name }}')" class="btn-delete">🗑️
+                            Удалить</button>
+                    </td>
+                </tr>
+
+                <!-- 
+                <tr id="product-row-{{ product.id }}" 
+                    data-category-id="{{ product.category_id }}" 
+                    data-image-url="{{ product.image_url }}">
+                    
+                    <td class="prod-name">{{ product.name }}</td>
+                    <td class="prod-desc" style="display:none;">{{ product.description }}</td>
+                    <td class="prod-price">{{ product.price }}</td>
+                    <td class="prod-stock">{{ product.stock }}</td>
+                    <td>
+                        <button onclick="openEditModal({{ product.id }})" class="btn-edit">✏️ Изменить</button>
+                        <button onclick="deleteProduct({{ product.id }}, '{{ product.name }}')" class="btn-delete">🗑️ Удалить</button>
+                    </td>
+                </tr>
+                -->
+
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления 
+    <div id="deleteModal" class="modal" style="display: none;">
+        <div class="modal-content modal-small">
+            <span class="modal-close" onclick="closeDeleteModal()">&times;</span>
+            <h2>Подтверждение удаления</h2>
+            <p>Вы действительно хотите удалить товар <strong id="delete-product-name"></strong>?</p>
+            <div class="form-actions">
+                <button id="confirm-delete" class="btn-danger">🗑️ Удалить</button>
+                <button type="button" class="btn-reset" onclick="closeDeleteModal()">Отмена</button>
+            </div>
+        </div>
+    </div>
+    -->
+    <!-- Модальное окно действий с товаром 
+    <div id="actionModal" class="modal" style="display: none;">
+        <div class="modal-content modal-small">
+            <span class="modal-close" onclick="closeActionModal()">&times;</span>
+            <h2>Действия с товаром</h2>
+            <div class="action-buttons">
+                <button id="modal-edit" class="btn-primary">✏️ Редактировать</button>
+                <button id="modal-delete" class="btn-danger">🗑️ Удалить</button>
+            </div>
+        </div>
+    </div>
+</div>
+-->
+
+    <!-- Универсальное модальное окно для Создания и Редактирования товара -->
+    <div id="productModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeProductModal()">&times;</span>
+            <h2 id="modalTitle">Добавить новый товар</h2>
+
+            <form id="productForm">
+                <!-- Скрытое поле для ID (заполнено только при редактировании) -->
+                <input type="hidden" id="form_product_id" value="">
+
+                <div class="form-group">
+                    <label for="edit_name">Название товара:</label>
+                    <input type="text" id="edit_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_description">Описание:</label>
+                    <textarea id="edit_description" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_price">Цена ($):</label>
+                    <input type="number" id="edit_price" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_stock">Количество на складе:</label>
+                    <input type="number" id="edit_stock" value="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_category">Категория:</label>
+                    <select id="edit_category" required>
+                        <option value="" disabled selected>-- Выберите категорию --</option>
+                        <!-- Цикл Jinja2 для динамического заполнения категорий из базы -->
+                        {% for cat_id, cat_name in categories.items() %}
+                        <option value="{{ cat_id }}">{{ cat_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Блок загрузки картинки (рабочий функционал) -->
+                <div class="form-group">
+                    <label>Изображение товара:</label>
+                    <input type="file" id="imageInput" onchange="previewImage(this)">
+                    <input type="hidden" id="image_url"> <!-- Сюда пишется путь -->
+                    <div id="imagePreview" style="display: none; margin-top: 10px;">
+                        <img id="previewImg" src="" alt="Превью" style="max-width: 150px; border-radius: 5px;">
+                    </div>
+                </div>
+
+                <div class="form-actions" style="margin-top: 20px;">
+                    <button type="button" onclick="saveProduct()" class="btn-success" id="submitBtn">Сохранить</button>
+                    <button type="button" onclick="closeProductModal()" class="btn-secondary">Отмена</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .admin-header h1 {
+            margin: 0;
+            color: #333;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .filters-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+        }
+
+        .filters-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: produmn;
+            gap: 0.3rem;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .filter-input,
+        .filter-select {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .btn-filter,
+        .btn-reset-filter {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-filter {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-reset-filter {
+            background: #6c757d;
+            color: white;
+        }
+
+        .products-table-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .products-table th,
+        .products-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+
+        .products-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        .products-table tr:hover {
+            background: #f8f9ff;
+            cursor: pointer;
+        }
+
+        .product-row {
+            transition: background 0.2s;
+        }
+
+        .prod-id {
+            width: 60px;
+        }
+
+        .prod-image {
+            width: 70px;
+        }
+
+        .prod-name {
+            min-width: 200px;
+            word-break: break-word;
+        }
+
+        .prod-category {
+            width: 120px;
+        }
+
+        .prod-price {
+            width: 100px;
+        }
+
+        .prod-stock {
+            width: 80px;
+        }
+
+        .prod-actions {
+            width: 140px;
+            white-space: nowrap;
+        }
+
+        .btn-edit,
+        .btn-delete {
+            padding: 5px 10px;
+            margin: 0 2px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-edit {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .product-thumb img {
+            background: #f5f5f5;
+            padding: 2px;
+        }
+
+        .modal-small {
+            max-width: 400px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .action-buttons button {
+            padding: 10px 20px;
+            font-size: 1rem;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        .btn-reset {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 1rem;
+            }
+
+            .filters-form {
+                flex-direction: produmn;
+                align-items: stretch;
+            }
+
+            .products-table th,
+            .products-table td {
+                padding: 8px 10px;
+            }
+
+            .prod-actions {
+                white-space: normal;
+            }
+
+            .btn-edit,
+            .btn-delete {
+                display: inline-block;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+
+    <script>
+
+        let currentProductId = null;
+        let currentProductName = null;
+
+        //    // Загрузка категорий
+        //     async function loadCategories() {
+        //         try {
+        //             const response = await fetch('/admin/categories', {
+        //                 credentials: 'same-origin'
+        //             });
+
+        //             if (response.ok) {
+        //                 const categories = await response.json();
+        //                 const select = document.getElementById('category_id');
+
+        //                 // Очищаем существующие опции (кроме первой)
+        //                 while (select.options.length > 1) {
+        //                     select.remove(1);
+        //                 }
+
+        //                 categories.forEach(category => {
+        //                     const option = document.createElement('option');
+        //                     option.value = category.id;
+        //                     option.textContent = category.name;
+        //                     select.appendChild(option);
+        //                 });
+        //             } else if (response.status === 401) {
+        //                 window.location.href = '/auth/login';
+        //             }
+        //         } catch (error) {
+        //             console.error('Ошибка загрузки категорий:', error);
+        //         }
+        //     }
+
+
+        // Фильтрация товаров
+        function filterProducts() {
+            const limit = document.getElementById('filter-limit').value;
+            const searchName = document.getElementById('filter-name').value.toLowerCase();
+            const category = document.getElementById('filter-category').value;
+
+            const rows = document.querySelectorAll('#products-tbody .product-row');
+            let visibleCount = 0;
+            let limitNum = limit === 'all' ? Infinity : parseInt(limit);
+            let lastVisibleIndex = 0;
+
+            // Сначала скрываем все строки
+            rows.forEach(row => {
+                row.style.display = 'none';
+            });
+
+            // Затем показываем подходящие
+            for (let i = rows.length - 1; i >= 0; i--) {
+                const row = rows[i];
+                const productName = row.dataset.productName.toLowerCase();
+                const productCategory = row.dataset.productCategory;
+
+                let matches = true;
+
+                if (searchName && !productName.includes(searchName)) {
+                    matches = false;
+                }
+
+                if (category !== 'all' && productCategory !== category) {
+                    matches = false;
+                }
+
+                if (matches && visibleCount < limitNum) {
+                    row.style.display = '';
+                    visibleCount++;
+                    lastVisibleIndex = i;
+                }
+            }
+        }
+        ////
+
+        // Функция отправки обновленных данных на сервер
+        async function updateProduct(productId) {
+            // window.location.href = `/admin/products?edit=${productId}`;
+            // Собираем данные из полей формы модального окна
+            const productData = {
+                name: document.getElementById('edit_name').value,
+                description: document.getElementById('edit_description').value,
+                price: parseFloat(document.getElementById('edit_price').value),
+                category_id: parseInt(document.getElementById('edit_category').value),
+                stock: parseInt(document.getElementById('edit_stock').value),
+                // Сюда попадает URL новой картинки (после previewImage) или остается старый
+                image_url: document.getElementById('image_url').value
+            };
+
+            try {
+                const response = await fetch(`/admin/products/${productId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json' // Отправляем как JSON
+                    },
+                    credentials: 'include', // Обязательно для передачи куки авторизации
+                    body: JSON.stringify(productData)
+                });
+
+                if (response.ok) {
+                    const updatedProduct = await response.json();
+                    showMessage('✅ Товар успешно обновлен!', 'success');
+
+                    // Закрываем модальное окно и обновляем таблицу товаров на странице
+                    closeModal();
+                    location.reload(); // Или функция обновления строки таблицы без перезагрузки
+                } else if (response.status === 401) {
+                    showMessage('❌ Ошибка: Сессия истекла. Перезайдите в систему.', 'error');
+                } else {
+                    const errData = await response.json();
+                    showMessage(`❌ Ошибка обновления: ${errData.detail || 'Неизвестная ошибка'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                showMessage('❌ Ошибка соединения с сервером', 'error');
+            }
+        }
+
+
+        // Редактирование товара
+        function editProduct(productId) {
+            window.location.href = `/admin/products?edit=${productId}`;
+        }
+
+        // Функция удаления товара
+        async function deleteProduct(productId, productName) {
+            // Защита от случайного нажатия
+            if (!confirm(`Вы уверены, что хотите полностью удалить товар "${productName}" и его изображение?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/products/${productId}`, {
+                    method: 'DELETE',
+                    credentials: 'include' // Передаем куки для проверки прав админа
+                });
+
+                if (response.ok) {
+                    showMessage('🗑️ Товар успешно удален!', 'success');
+
+                    // Удаляем строку товара из HTML-таблицы динамически, чтобы не перезагружать страницу
+                    const productRow = document.getElementById(`product-row-${productId}`);
+                    if (productRow) {
+                        productRow.remove();
+                    } else {
+                        location.reload(); // Фолбэк, если у строк таблицы нет ID
+                    }
+                } else if (response.status === 401) {
+                    showMessage('❌ Нет прав на удаление (Требуется авторизация)', 'error');
+                } else {
+                    showMessage('❌ Не удалось удалить товар', 'error');
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                showMessage('❌ Ошибка соединения при удалении', 'error');
+            }
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            currentProductId = null;
+            currentProductName = null;
+        }
+
+        function showActionModal(productId) {
+            currentProductId = productId;
+            document.getElementById('actionModal').style.display = 'block';
+        }
+
+        function closeActionModal() {
+            document.getElementById('actionModal').style.display = 'none';
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            setTimeout(() => messageDiv.remove(), 3000);
+        }
+
+        // Обработчики событий
+        document.getElementById('apply-filters').addEventListener('click', filterProducts);
+        document.getElementById('reset-filters').addEventListener('click', () => {
+            document.getElementById('filter-name').value = '';
+            document.getElementById('filter-category').value = 'all';
+            document.getElementById('filter-limit').value = '10';
+            filterProducts();
+        });
+        ////////////////  cmd + /
+        // document.getElementById('modal-delete').addEventListener('click', async () => {
+        //     if (currentProductId) {
+        //         const row = document.querySelector(`.product-row[data-product-id="${currentProductId}"]`);
+        //         const productName = row?.dataset.productName || '';
+        //         deleteProduct(currentProductId, productName);
+        //     }
+        //     closeActionModal();
+        // });
+
+        // Клик по строке таблицы для показа модального окна
+        document.querySelectorAll('.product-row').forEach(row => {
+            row.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') return;
+                const productId = row.dataset.productId;
+                showActionModal(productId);
+            });
+        });
+
+        // Загрузка категорий для фильтра (если нужно динамически обновить)
+        function loadCategoriesForFilter() {
+            fetch('/admin/categories', {
+                credentials: 'same-origin'
+            })
+                .then(response => response.json())
+                .then(categories => {
+                    const select = document.getElementById('filter-category');
+                    const currentValue = select.value;
+                    // Очищаем опции кроме первой
+                    while (select.options.length > 1) {
+                        select.remove(1);
+                    }
+                    categories.forEach(category => {
+                        const option = document.createElement('option');
+                        option.value = category.name;
+                        option.textContent = category.name;
+                        select.appendChild(option);
+                    });
+                    select.value = currentValue;
+                })
+                .catch(err => console.error('Error loading categories:', err));
+        }
+
+        // Загрузка категорий для фильтра
+        loadCategoriesForFilter();
+
+        // Применяем фильтры при загрузке
+        filterProducts();
+
+
+        ////////
+
+        // 1. Открытие модального окна для ДОБАВЛЕНИЯ нового товара
+        function openCreateModal() {
+            document.getElementById('modalTitle').innerText = "Добавить новый товар";
+            document.getElementById('productForm').reset(); // Очищаем все поля
+            document.getElementById('form_product_id').value = ""; // ID пустой
+            document.getElementById('image_url').value = "";
+            document.getElementById('imagePreview').style.display = "none";
+
+            document.getElementById('productModal').style.display = 'block';
+        }
+
+        // 2. Открытие модального окна для РЕДАКТИРОВАНИЯ (заполнение данными из строки таблицы)
+        function openEditModal(productId) {
+            document.getElementById('modalTitle').innerText = "Редактирование товара";
+
+            const row = document.getElementById(`product-row-${productId}`);
+
+            // Считываем текстовые поля
+            const currentName = row.querySelector('.prod-name').innerText.trim();
+            const currentDesc = row.querySelector('.prod-desc')?.innerText.trim() || "";
+            const currentStock = parseInt(row.querySelector('.prod-stock').innerText) || 0;
+
+            // Считываем чистую цену из data-атрибута, который мы добавили выше
+            const currentPrice = parseFloat(row.querySelector('.prod-price').innerText) //getAttribute('data-raw-price')) || 0.0;
+
+            // Считываем ID категории и картинку из data-атрибутов строки таблицы <tr>
+            const currentCatId = row.getAttribute('data-category-id');
+            // const currentImgUrl = row.getAttribute('data-image-url');
+            let currentImgUrl = row.getAttribute('data-image-url');
+
+            // Заполняем элементы управления формы
+            document.getElementById('form_product_id').value = productId;
+            document.getElementById('edit_name').value = currentName;
+            document.getElementById('edit_description').value = currentDesc;
+            document.getElementById('edit_price').value = currentPrice;
+            document.getElementById('edit_stock').value = currentStock;
+
+            // Выставляем правильную категорию в <select>
+            const selectCategory = document.getElementById('edit_category');
+            if (currentCatId && selectCategory) {
+                selectCategory.value = currentCatId;
+            }
+
+            // Записываем путь картинки в скрытый инпут
+            document.getElementById('image_url').value = currentImgUrl || "";
+
+            // Отрисовываем превью изображения
+            const preview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+
+            if (currentImgUrl && currentImgUrl !== 'None' && currentImgUrl !== '') {
+                previewImg.src = currentImgUrl;
+                preview.style.display = 'inline-block';
+            } else {
+                previewImg.src = '';
+                preview.style.display = 'none';
+            }
+
+            //<button type="button" onclick="saveProduct(event)" class="btn-success" id="submitBtn">Сохранить</button>
+            document.getElementById('productModal').style.display = 'block';
+        }
+
+        // Закрытие окна
+        function closeProductModal() {
+            document.getElementById('productModal').style.display = 'none';
+        }
+
+        // 3. УНИВЕРСАЛЬНАЯ функция сохранения (Умный Save)
+        // async function saveProduct() {
+        //     const productId = document.getElementById('form_product_id').value;
+
+        //     // Собираем данные полей (теперь элементы гарантированно существуют!)
+        //     const productData = {
+        //         name: document.getElementById('edit_name').value,
+        //         description: document.getElementById('edit_description').value,
+        //         price: parseFloat(document.getElementById('edit_price').value),
+        //         category_id: parseInt(document.getElementById('edit_category').value),
+        //         stock: parseInt(document.getElementById('edit_stock').value),
+        //         image_url: document.getElementById('image_url').value || null
+        //     };
+
+        //     // Определяем стратегию: если ID есть — PUT (обновление), если нет — POST (создание)
+        //     const isEdit = productId !== "";
+        //     const url = isEdit ? `/admin/products/${productId}` : '/admin/products';
+        //     const method = isEdit ? 'PUT' : 'POST';
+
+        //     try {
+        //         const response = await fetch(url, {
+        //             method: method,
+        //             headers: { 'Content-Type': 'application/json' },
+        //             credentials: 'include',
+        //             body: JSON.stringify(productData)
+        //         });
+
+        //         if (response.ok) {
+        //             showMessage(isEdit ? '✅ Товар обновлен!' : '✅ Товар добавлен!', 'success');
+        //             closeProductModal();
+        //             location.reload(); // Перезагружаем страницу, чтобы обновить таблицу
+        //         } else {
+        //             const err = await response.json();
+        //             showMessage(`❌ Ошибка: ${err.detail || 'Не удалось сохранить'}`, 'error');
+        //         }
+        //     } catch (error) {
+        //         console.error('Save error:', error);
+        //         showMessage('❌ Ошибка соединения с сервером', 'error');
+        //     }
+        // }
+
+
+
+
+
+        async function saveProduct(event) {
+            // 1. СТРОГО КРИТИЧНО: Отменяем стандартный submit браузера, 
+            // который сбрасывает инпуты в "No file chosen" прямо в момент клика!
+            if (event) {
+                event.preventDefault();
+            }
+
+            const productId = document.getElementById('form_product_id').value;
+
+            // Получаем значение пути картинки
+            let imgUrlValue = document.getElementById('image_url').value;
+
+            // Отладочный лог: вы увидите в консоли браузера, ЧТО именно нашла функция
+            console.log("Содержимое инпута image_url перед сборкой:", imgUrlValue);
+
+            // Если там строка 'None', очищаем её для Pydantic
+            if (imgUrlValue === 'None' || imgUrlValue.trim() === '') {
+                imgUrlValue = null;
+            }
+
+            const productData = {
+                name: document.getElementById('edit_name').value.trim(),
+                description: document.getElementById('edit_description').value.trim() || null,
+                price: parseFloat(document.getElementById('edit_price').value) || 0.0,
+                category_id: parseInt(document.getElementById('edit_category').value),
+                stock: parseInt(document.getElementById('edit_stock').value) || 0,
+                image_url: imgUrlValue // Передаем проверенное значение пути
+            };
+
+            console.log("Финальный JSON, который отправляется на бэкенд:", JSON.stringify(productData));
+
+            const isEdit = productId !== "";
+            const url = isEdit ? `/admin/products/${productId}` : '/admin/products';
+            const method = isEdit ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(productData)
+                });
+
+                if (response.ok) {
+                    showMessage(isEdit ? '✅ Товар обновлен!' : '✅ Товар добавлен!', 'success');
+                    closeProductModal();
+                    location.reload(); // Перезагружаем для обновления таблицы
+                } else {
+                    const err = await response.json();
+                    console.error("Бэкенд отклонил данные (422/400). Причина:", err.detail);
+                    showMessage(`❌ Ошибка сохранения: ${JSON.stringify(err.detail)}`, 'error');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                showMessage('❌ Ошибка соединения с сервером', 'error');
+            }
+        }
+
+
+
+
+
+
+        // // Загрузка категорий при загрузке страницы
+        // loadCategories();
+
+
+        // Предпросмотр и загрузка изображения
+        async function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    const preview = document.getElementById('imagePreview');
+                    const img = document.getElementById('previewImg');
+                    img.src = e.target.result;
+                    preview.style.display = 'inline-block';
+                };
+
+                reader.readAsDataURL(file);
+
+                // Загружаем файл на сервер
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch('/admin/upload-image', {
+                        method: 'POST',
+                        credentials: 'include',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        document.getElementById('image_url').value = data.image_url;
+                        showMessage('✅ Изображение загружено', 'success');
+                    } else {
+                        showMessage('❌ Ошибка загрузки изображения', 'error');
+                    }
+                } catch (error) {
+                    console.error('Upload error:', error);
+                    showMessage('❌ Ошибка соединения', 'error');
+                }
+            }
+        }
+
+        function clearImage() {
+            document.getElementById('image').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('image_url').value = '';
+        }
+
+    </script>
+    {% endblock %}

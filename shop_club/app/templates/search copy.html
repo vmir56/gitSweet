@@ -1,0 +1,579 @@
+{% extends "base.html" %}
+
+{% block title %}Поиск аналогов товара{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>🔍 Поиск аналогов товара</h1>
+        <a href="/admin/products" class="btn-back">← Назад к списку товаров</a>
+    </div>
+
+    <div class="search-container">
+        <form id="searchForm" class="search-form">
+            <div class="form-group">
+                <label for="product_name" class="required">Название товара для поиска аналогов</label>
+                <input type="text" id="product_name" name="product_name" required
+                    placeholder="Например: iPhone 15 Pro Max 256GB" autocomplete="off">
+                <small>Введите точное название товара, для которого хотите найти аналоги</small>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="source">Источник поиска</label>
+                    <select id="source" name="source">
+                        <option value="ozon" selected>Ozon</option>
+                        <option value="wildberries">Wildberries</option>
+                        <option value="yandex_market">Яндекс.Маркет</option>
+                    </select>
+                    <small>В будущем список источников будет расширен</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="max_results">Максимальное количество результатов</label>
+                    <select id="max_results" name="max_results">
+                        <option value="3">3</option>
+                        <option value="5" selected>5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-submit" id="searchBtn">
+                    🔍 Запросить аналоги
+                </button>
+                <button type="reset" class="btn-reset">🗑️ Очистить форму</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Результаты поиска -->
+    <div id="resultsContainer" style="display: none; margin-top: 2rem;">
+        <div class="results-header">
+            <h2>📊 Результаты поиска</h2>
+            <span id="resultsCount" class="results-count"></span>
+        </div>
+        <div id="resultsList" class="results-grid">
+            <!-- Карточки результатов будут вставляться сюда -->
+        </div>
+    </div>
+
+    <!-- Индикатор загрузки -->
+    <div id="loadingIndicator" style="display: none; text-align: center; padding: 2rem;">
+        <div class="spinner"></div>
+        <p style="margin-top: 1rem; color: #666;">⏳ Поиск аналогов на маркетплейсах...</p>
+        <p style="color: #999; font-size: 0.9rem;">Это может занять до 30 секунд</p>
+    </div>
+</div>
+
+<style>
+    .admin-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .admin-header h1 {
+        margin: 0;
+        color: #333;
+    }
+
+    .btn-back {
+        background: #6c757d;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: background 0.3s;
+    }
+
+    .btn-back:hover {
+        background: #5a6268;
+    }
+
+    .search-container {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    label.required::after {
+        content: " *";
+        color: #e74c3c;
+    }
+
+    input,
+    select {
+        padding: 0.75rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s;
+        font-family: inherit;
+    }
+
+    input:focus,
+    select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    small {
+        color: #666;
+        font-size: 0.85rem;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        flex: 1;
+        transition: all 0.3s;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-reset {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background 0.3s;
+    }
+
+    .btn-reset:hover {
+        background: #c82333;
+    }
+
+    /* ====== РЕЗУЛЬТАТЫ ====== */
+    .results-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .results-header h2 {
+        margin: 0;
+        color: #333;
+    }
+
+    .results-count {
+        background: #667eea;
+        color: white;
+        padding: 0.3rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+    }
+
+    .results-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .result-card {
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        transition: all 0.3s;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .result-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.15);
+    }
+
+    .result-info {
+        flex: 1;
+    }
+
+    .result-title {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.25rem;
+    }
+
+    .result-meta {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .result-meta .source-badge {
+        background: #e9ecef;
+        padding: 0.1rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+    }
+
+    .result-price {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #28a745;
+        white-space: nowrap;
+    }
+
+    .result-link {
+        background: #667eea;
+        color: white;
+        padding: 0.4rem 1rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: background 0.3s;
+    }
+
+    .result-link:hover {
+        background: #5a6bd6;
+    }
+
+    /* ====== СПИННЕР ====== */
+    .spinner {
+        display: inline-block;
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* ====== СООБЩЕНИЯ ====== */
+    .message {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        animation: slideIn 0.3s ease;
+        z-index: 1000;
+        max-width: 400px;
+    }
+
+    .message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .message.info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* ====== АДАПТИВ ====== */
+    @media (max-width: 600px) {
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .admin-container {
+            padding: 1rem;
+        }
+
+        .search-container {
+            padding: 1rem;
+        }
+
+        .result-card {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .result-price {
+            text-align: left;
+        }
+    }
+</style>
+
+<script>
+    // ====== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ======
+    function getCookie(name) {
+        let value = "; " + document.cookie;
+        let parts = value.split("; " + name + "=");
+        if (parts.length === 2) return parts.pop().split(";").shift();
+    }
+
+    function showMessage(message, type = 'info') {
+        const existing = document.querySelector('.message');
+        if (existing) existing.remove();
+
+        const div = document.createElement('div');
+        div.className = `message ${type}`;
+        div.textContent = message;
+        document.body.appendChild(div);
+        setTimeout(() => div.remove(), 4000);
+    }
+
+    // ====== ОТОБРАЖЕНИЕ РЕЗУЛЬТАТОВ ======
+    function renderResults(data) {
+        const container = document.getElementById('resultsContainer');
+        const list = document.getElementById('resultsList');
+        const count = document.getElementById('resultsCount');
+
+        // Показываем контейнер
+        container.style.display = 'block';
+
+        // Обновляем счётчик
+        const total = data.total || (data.results ? data.results.length : 0);
+        count.textContent = `Найдено: ${total} аналогов`;
+
+        // Очищаем список
+        list.innerHTML = '';
+
+        if (!data.results || data.results.length === 0) {
+            list.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: #666;">
+                    <p>😕 Аналоги не найдены</p>
+                    <small>Попробуйте изменить запрос или источник</small>
+                </div>
+            `;
+            return;
+        }
+
+        // Сортируем по цене (дешевле → дороже)
+        const sorted = [...data.results].sort((a, b) => (a.price || 0) - (b.price || 0));
+
+        sorted.forEach((item, index) => {
+            const card = document.createElement('div');
+            card.className = 'result-card';
+
+            const sourceLabels = {
+                'ozon': '🟣 Ozon',
+                'wildberries': '🟠 Wildberries',
+                'yandex_market': '🔵 Яндекс.Маркет'
+            };
+
+            const sourceLabel = sourceLabels[item.source] || item.source || 'Ozon';
+
+            card.innerHTML = `
+                <div class="result-info">
+                    <div class="result-title">${index + 1}. ${item.title || 'Без названия'}</div>
+                    <div class="result-meta">
+                        <span class="source-badge">${sourceLabel}</span>
+                        ${item.old_price ? ` <span style="text-decoration: line-through; color: #999;">${item.old_price} ₽</span>` : ''}
+                    </div>
+                </div>
+                <div class="result-price">
+                    ${item.price ? `${item.price.toFixed(0)} ₽` : 'Цена не указана'}
+                </div>
+                ${item.url ? `<a href="${item.url}" target="_blank" class="result-link">Перейти</a>` : ''}
+            `;
+            list.appendChild(card);
+        });
+    }
+
+    // ====== ОТПРАВКА ЗАПРОСА В PRICE_SPIDER ======
+    async function sendSearchRequest(formData) {
+        const searchBtn = document.getElementById('searchBtn');
+        const loading = document.getElementById('loadingIndicator');
+
+        searchBtn.disabled = true;
+        searchBtn.textContent = '⏳ Поиск...';
+        loading.style.display = 'block';
+        document.getElementById('resultsContainer').style.display = 'none';
+
+        try {
+            const payload = {
+                query: formData.product_name,
+                max_results: parseInt(formData.max_results)
+            };
+
+            console.log('📤 Отправка запроса:', payload);
+
+            // 👇 ВАЖНО: НЕ ПЕРЕДАЁМ ТОКЕН ВРУЧНУЮ, ПОЛАГАЕМСЯ НА КУКИ
+            const response = await fetch('/api/v1/spider/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                    // ⚠️ НЕ ДОБАВЛЯЕМ Authorization: Bearer
+                },
+                credentials: 'include',  // 👈 КЛЮЧЕВОЙ МОМЕНТ!
+                body: JSON.stringify(payload)
+            });
+
+            console.log('📥 Статус ответа:', response.status);
+
+            if (response.status === 401 || response.status === 403) {
+                showMessage('⚠️ Сессия истекла. Перенаправляем на вход...', 'error');
+                setTimeout(() => window.location.href = '/auth/login', 1500);
+                return;
+            }
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                let errorDetail = 'Ошибка при поиске аналогов';
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    errorDetail = errorJson.detail || errorJson.message || errorText;
+                } catch {
+                    errorDetail = errorText || errorDetail;
+                }
+                showMessage(`❌ ${errorDetail}`, 'error');
+                return;
+            }
+
+            const result = await response.json();
+            console.log('✅ Результат:', result);
+
+            renderResults(result);
+
+            if (result.total === 0) {
+                showMessage('😕 Аналоги не найдены. Попробуйте другой запрос.', 'info');
+            } else {
+                showMessage(`✅ Найдено ${result.total} аналогов!`, 'success');
+            }
+
+        } catch (error) {
+            console.error('❌ Ошибка:', error);
+            showMessage(`❌ Ошибка соединения: ${error.message}`, 'error');
+        } finally {
+            searchBtn.disabled = false;
+            searchBtn.textContent = '🔍 Запросить аналоги';
+            loading.style.display = 'none';
+        }
+    }
+
+    // ====== ОБРАБОТЧИК ФОРМЫ ======
+    document.getElementById('searchForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const form = e.target;
+        const formData = {
+            product_name: document.getElementById('product_name').value.trim(),
+            source: document.getElementById('source').value,
+            max_results: document.getElementById('max_results').value
+        };
+
+        // Валидация
+        if (!formData.product_name) {
+            showMessage('❌ Введите название товара', 'error');
+            return;
+        }
+
+        if (formData.product_name.length < 2) {
+            showMessage('❌ Название должно содержать минимум 2 символа', 'error');
+            return;
+        }
+
+        await sendSearchRequest(formData);
+    });
+
+    // ====== ОБРАБОТЧИК СБРОСА ======
+    document.querySelector('.btn-reset').addEventListener('click', () => {
+        document.getElementById('resultsContainer').style.display = 'none';
+        document.getElementById('loadingIndicator').style.display = 'none';
+        document.getElementById('searchBtn').disabled = false;
+        document.getElementById('searchBtn').textContent = '🔍 Запросить аналоги';
+    });
+
+    // ====== ПРИ НАЖАТИИ ENTER В ПОЛЕ ПОИСКА ======
+    document.getElementById('product_name').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('searchForm').dispatchEvent(new Event('submit'));
+        }
+    });
+
+    // ====== ЛОГ ДЛЯ ОТЛАДКИ ======
+    console.log('✅ Шаблон search.html загружен');
+    console.log('📌 Форма поиска готова к работе');
+</script>
+{% endblock %}

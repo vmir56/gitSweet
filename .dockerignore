@@ -1,0 +1,15 @@
+# Исключаем историю Git
+.git
+.gitignore
+
+# Исключаем системные файлы Mac
+.DS_Store
+
+# Исключаем локальные настройки VS Code
+.vscode/
+
+# Исключаем виртуальное окружение Python
+.venv
+venv
+__pycache__/
+*.pyc

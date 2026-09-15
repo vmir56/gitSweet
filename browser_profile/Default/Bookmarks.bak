@@ -1,0 +1,47 @@
+{
+   "checksum": "3d5b1230f3418bf231bc2e7a39254a33",
+   "roots": {
+      "bookmark_bar": {
+         "children": [ {
+            "date_added": "13429381107664205",
+            "date_last_used": "0",
+            "guid": "5dabe082-329d-4de7-b440-21c0db3bf178",
+            "id": "5",
+            "meta_info": {
+               "power_bookmark_meta": ""
+            },
+            "name": "Купить Apple iPad Pro 2025 Черный космос по цене 113 990 ₽ в Новосибирске | Яблочный путь",
+            "type": "url",
+            "url": "https://xn--90aqfieivh6a4bpz.xn--p1ai/shop/ipad/ipad-pro/ipad-pro-2025-ipad-pro/apple-ipad-pro-2025/chernyj-kosmos-13-dyujmov-256-gb-obychnoe-wi-fi/"
+         } ],
+         "date_added": "13429378888352987",
+         "date_last_used": "0",
+         "date_modified": "13429381124711427",
+         "guid": "0bc5d13f-2cba-5d74-951f-3f233fe6c908",
+         "id": "1",
+         "name": "Bookmarks Bar",
+         "type": "folder"
+      },
+      "other": {
+         "children": [  ],
+         "date_added": "13429378888352987",
+         "date_last_used": "0",
+         "date_modified": "13429381107664205",
+         "guid": "82b081ec-3dd3-529c-8475-ab6c344590dd",
+         "id": "2",
+         "name": "Other Bookmarks",
+         "type": "folder"
+      },
+      "synced": {
+         "children": [  ],
+         "date_added": "13429378888352987",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "4cf2e351-0e85-532b-bb37-df045d8f8d0f",
+         "id": "3",
+         "name": "Mobile Bookmarks",
+         "type": "folder"
+      }
+   },
+   "version": 1
+}

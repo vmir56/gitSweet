@@ -1,0 +1,6 @@
+2026/07/24-08:41:28.951 33a58 Creating DB /Users/v.ant/mk/vs/price_spider/chrome_profile/Default/IndexedDB/https_2gis.ru_0.indexeddb.leveldb since it was missing.
+2026/07/24-08:41:28.953 33a58 Reusing MANIFEST /Users/v.ant/mk/vs/price_spider/chrome_profile/Default/IndexedDB/https_2gis.ru_0.indexeddb.leveldb/MANIFEST-000001
+2026/07/24-08:45:02.970 33a59 Level-0 table #5: started
+2026/07/24-08:45:02.972 33a59 Level-0 table #5: 1828 bytes OK
+2026/07/24-08:45:02.976 33a59 Delete type=0 #3
+2026/07/24-08:45:02.977 33a59 Manual compaction at level-0 from (begin) .. (end); will stop at (end)

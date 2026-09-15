@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Shop Club- Главная{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <div class="hero-content">
+        <h1>Добро пожаловать в Shop Club</h1>
+        <p>Лучшие товары по лучшим ценам</p>
+        <a href="/catalog" class="btn btn-primary hero-btn">Перейти в каталог</a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="features">
+        <div class="feature">
+            <div class="feature-icon">🚚</div>
+            <h3>Быстрая доставка</h3>
+            <p>Доставка по всей стране за 1-3 дня</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">💎</div>
+            <h3>Качество гарантируем</h3>
+            <p>Только оригинальные товары</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🛡️</div>
+            <h3>Безопасная оплата</h3>
+            <p>Защита ваших платежей</p>
+        </div>
+        <div class="feature">
+            <div class="feature-icon">🔄</div>
+            <h3>Возврат товара</h3>
+            <p>30 дней на возврат</p>
+        </div>
+    </div>
+    
+    <div class="promo">
+        <h2>🔥 Горячие предложения</h2>
+        <div class="promo-grid" id="promoProducts">
+            <!-- Товары загрузятся через JS -->
+        </div>
+    </div>
+    
+    <div class="info-section">
+        <div class="info-text">
+            <h2>О магазине Shop Club</h2>
+            <p>Shop Club - это современный интернет-магазин, где вы найдете тысячи товаров для дома, электроники, одежды и многого другого.</p>
+            <p>Здесь Вы можете запустить поиск во множестве магазинов нужного Вам товара по лучшим ценам.</p>
+            <p>Мы работаем для вас с 2020 года и уже обслужили более 100 000 довольных клиентов.</p>
+            <ul>
+                <li>✓ Низкие цены</li>
+                <li>✓ Большой ассортимент</li>
+                <li>✓ Круглосуточная поддержка</li>
+                <li>✓ Акции и скидки для постоянных клиентов</li>
+            </ul>
+        </div>
+        <div class="info-image">
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-number">1000+</span>
+                    <span class="stat-label">Товаров</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">100k+</span>
+                    <span class="stat-label">Клиентов</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Поддержка</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    
+    .hero-content h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .hero-content p {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+        opacity: 0.9;
+    }
+    
+    .hero-btn {
+        font-size: 1.1rem;
+        padding: 0.8rem 2rem;
+        background: white;
+        color: #667eea;
+    }
+    
+    .hero-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin: 4rem 0;
+    }
+    
+    .feature {
+        text-align: center;
+        padding: 2rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        transition: transform 0.3s;
+    }
+    
+    .feature:hover {
+        transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .feature h3 {
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+    
+    .feature p {
+        color: #666;
+    }
+    
+    .promo {
+        margin: 4rem 0;
+        color: #333;
+    }
+    
+    .promo h2 {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #333;
+    }
+    
+    .promo-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+    
+    .promo-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        transition: transform 0.3s;
+    }
+    
+    .promo-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .promo-card-content {
+        padding: 1.5rem;
+    }
+    
+    .promo-card h3 {
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+    
+    .promo-price {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #667eea;
+        margin: 0.5rem 0;
+    }
+    
+    .promo-old-price {
+        text-decoration: line-through;
+        color: #999;
+        font-size: 0.9rem;
+        margin-left: 0.5rem;
+    }
+    
+    .promo-discount {
+        display: inline-block;
+        background: #e74c3c;
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 5px;
+        font-size: 0.8rem;
+        margin-left: 0.5rem;
+    }
+    
+    .info-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        align-items: center;
+        margin: 4rem 0;
+    }
+    
+    .info-text h2 {
+        margin-bottom: 1rem;
+        color: white;
+    }
+    
+    .info-text p {
+        color: #FFFF00;
+        margin-bottom: 1rem;
+        line-height: 1.6;
+    }
+    
+    .info-text ul {
+        list-style: none;
+        margin-top: 1rem;
+    }
+    
+    .info-text li {
+        margin-bottom: 0.5rem;
+        color: white;
+    }
+    
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    }
+    
+    .stat {
+        text-align: center;
+    }
+    
+    .stat-number {
+        display: block;
+        font-size: 2rem;
+        font-weight: bold;
+        color: #667eea;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    @media (max-width: 768px) {
+        .info-section {
+            grid-template-columns: 1fr;
+        }
+        
+        .hero-content h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<script>
+    async function loadPromoProducts() {
+        try {
+            const response = await fetch('/products/');
+            const products = await response.json();
+            const promoGrid = document.getElementById('promoProducts');
+            
+            // Берем первые 4 товара
+            const promoProducts = products.slice(0, 4);
+            
+            promoGrid.innerHTML = promoProducts.map(product => `
+                <div class="promo-card">
+                    <div class="promo-card-content">
+                        <h3>${product.name}</h3>
+                        <p>${product.description || 'Отличный товар по лучшей цене!'}</p>
+                        <div class="promo-price">
+                            ${product.price} ₽
+                            <span class="promo-discount">-${Math.floor(Math.random() * 20 + 10)}%</span>
+                        </div>
+                        <button onclick="addToCart(${product.id})" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                            В корзину
+                        </button>
+                    </div>
+                </div>
+            `);
+        } catch (error) {
+            console.error('Error loading products:', error);
+        }
+    }
+    
+    async function addToCart(productId) {
+        try {
+            const formData = new URLSearchParams();
+            formData.append('quantity', '1');
+            
+            const response = await fetch(`/cart/add/${productId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: formData
+            });
+            
+            if (response.ok) {
+                showMessage('Товар добавлен в корзину!', 'success');
+                updateCartCount();
+            } else {
+                showMessage('Ошибка при добавлении товара', 'error');
+            }
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            showMessage('Ошибка при добавлении товара', 'error');
+        }
+    }
+    
+    loadPromoProducts();
+</script>
+{% endblock %}
